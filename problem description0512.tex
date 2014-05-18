@@ -1,0 +1,195 @@
+\documentclass[preprint,12pt]{elsarticle}
+\usepackage{amsthm}
+\usepackage[english]{babel}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{latexsym}
+\usepackage{morefloats}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{rotating}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+\usepackage[nodots]{numcompress}
+\DeclareMathOperator*{\argmin}{\arg\!\min}
+
+\begin{document}
+\nocite{*}
+
+\begin{frontmatter}
+%\title{The Share-a-Ride Problem:\\People and Parcels Sharing Taxis}
+\author[label1]{Qianru Ge}
+\author[label1]{Hao Peng}
+\author[label1]{Geert-Jan van Houtum}
+
+
+
+\address[label1]{Department of Industrial Engineering and Innovation Sciences, Eindhoven University of Technology, Eindhoven, The Netherlands}
+
+\begin{abstract}
+We consider an OEM who sells a series system for a customer under a Performance-Based Logistic (PBL) contract. During the design phase of the system, the OEM have to select an optimal design for each critical component in the system from all the possible alternatives with uncertain component reliability. The uncertainty  in component reliabilities can lead to large deviations of the realized system availability from the expected system availability. Upon a failure of a critical component in the system, the failed part will be replaced by a as-good-as new component. According to the PBL contract, when the total system down time exceeds a predetermined level, the OEM should pay a penalty cost to the customer with respect to the actual total downtime and a penalty rate. In this case, we formulate the Life Cycle Costs (LCC) of this multi-stage system which are affected by the uncertain component reliability. The LCC consist of design costs, repair costs and downtime costs.
+\end{abstract}
+
+\begin{keyword}
+Capital goods \sep Reliability optimization  \sep Performance-based contracting \sep Life cycle costs
+\end{keyword}
+\end{frontmatter}
+
+\section{Introduction}
+
+Capital goods are machines or products that are used by manufacturers to produce their end-products or
+that are used by service organizations to deliver their services (van Houtum 2010?). Advanced technical systems such as medical systems, manufacturing systems, defense systems are capital goods which are critical for the operational processes of their customers. System downtime of these capital goods can cause serious consequences (e.g. millions of euros of reduced production output, extra waiting time of passengers, failure of military missions). Therefore, customers of these complex systems such as hospitals, militaries and factories require high availability of these systems. On the other hand, the engineering systems involved in capital goods are becoming more and more complex due to the advancement of technologies. The maintenance and repair tasks are too challenging for customers to take care of by themselves. After-sale services such as maintenances and repairs are often needed by the customers.
+
+As a result, integrating services as a major sustainable source of the profit of original equipment manufacturers (OEMs) has been widely recommended by a large amount of papers in recent decades. A study conducted by Accenture (Dennis and Kambil 2003) shows that after-sale services contribute only 25\% of the total revenue across all manufacturing companies, but are responsible for $40\%-50\%$ of the profit. Many OEMs thus has been transforming their business strategy from product-oriented to service-oriented. After selling a system, under the traditional material-based contract, the OEM is responsible for the repair of the system only within the warranty period, which is often short compared to the life cycle of the system. After the warranty period, the OEM will charge the customer for providing spare parts, maintenance, and other services to keep the availability of the systems above certain levels. This may lead to higher spare parts costs, repair costs, and labor costs, whereas system availabilities can be lower than a customer anticipated when buying the system. This undesired situation for the customer can be avoided by making better agreements with the OEM when a new system is being bought. A type of contract that may be attractive for both customers and OEMs is a Performance-Based Logistics (PBL) contract. Under a PBL contract, the OEM is responsible to meet a predetermined system availability target during a specified period, e.g., 5-10 years, and a penalty cost has to be paid to the customer when one fails to meet the system availability target. When designing the system, such system availability targets have to be taken into account.
+
+
+
+We attempt to solve a system design problem. During the design phase of a system, engineers have to select a certain design from all the possible alternatives for each critical component/stage in the system. In real life, the outcome of any development process for a certain design is uncertain with respect to the reliability requirement (Hussain and Murthy 2003). For example, since the failure mechanisms of some emerging technologies (e.g., Micro-Electro-Mechanical Systems) are complex, it is often difficult to predict the actual reliability behaviors of the critical components. Therefore newly-designed devices have been found to have uncertain component reliabilities. The uncertainty in component reliabilities can lead to large deviations of the realized system availability from the expected system availability (a point estimate for the system availability). In this case, the uncertainty in component reliabilities also needs to be considered in the decision making of system design.
+
+%According to Oliva and Kallenberg (2003), providing after-sale services not only becomes a competitive advantage of OEMs under global competitions, also satisfies customers increasing demands for more services. Since in complex technical systems such as medical systems, material handling systems, defense systems and manufacturing systems, system failures lead to millions of euros of lost production for the customer, it is important that the availability of the systems is high, and that down-situations are recovered quickly (Kranenburg and van Houtum, 2009).
+
+%In this paper, we developed a model to choose different designs with uncertain reliability parameters for each critical component in order to minimize the Life Cycle Cost (LCC) of a system, which is affected by the system availability, in terms of choosing different designs with uncertain parameters for each critical component. We investigate a situation in which an OEM will sell a complex series system with $m$ critical components to a customer together with an PBL contract which will cover the life time of the system. In the design phase of the system, the OEM should chose the optimal design for each critical component from a set of designs with uncertain reliability distribution parameters. We provide a method to compare different component designs at the single component level, providing the conditions under which one design dominates the orders. In addition, we constitute an efficient frontier that reflects the trade-off between the total costs and system availability.
+%
+%To increase system availability, optimal reliability design, which aims to get an optimal system-level configuration while considering the tradeoff between system performance and costs, via enhancing component reliability and building in redundancy (Kuo and Wan 2007), has received many attentions since the 1960s.
+
+
+The remainder of the paper is organized as follows:
+
+
+
+
+
+\section{Literature}
+
+\section{Notations and assumptions}
+ \subsection{Notations}
+	 %\begin{center}
+   \begin{tabular}{l l}
+   %\hline
+$i$ & index for critical components in the system\\
+$j$ & index for rough designs of each component\\
+$r_{ij}$ & repair time for design $j$ in stage $i$\\
+$T$ & the time length of the service contract period\\
+$D_0$ & predetermined total downtime of a service contract\\
+$c_r^{ij}$ & repair cost per time\\
+$c_p$ & penalty cost per time unit after total downtime exceeding $D_0$ \\
+$x_{ij}$ & decision variable\\
+$\Lambda$    & system failure rate\\
+$\Lambda_{i}$  & failure rate of the $i^{th}$ component in the system \\
+$\Lambda_{ij}$ & failure rate of the $i^{th}$ component brought from supplier $j$ \\
+$A(\boldsymbol{x_{i}})$  &  design cost of component $i$\\
+$c^{ij}_{a}$ & design cost of the $i^{th}$ component brought from supplier $j$\\
+$N(x_{ij})$ & expected number of repairs occur in period $[0, T]$\\
+$\mu_{i}$ & mean of the failure rate in component $i$ \\
+$\mu_{ij}$ & mean of the failure rate in component $i$ bought from supplier $j$ \\
+$\sigma_{i}^{2}$ &  variance of the failure rate in component $i$ \\
+$\sigma_{ij}^{2}$ & variance of the failure rate in component $i$ bought from supplier $j$ \\
+$P(x_{ij},n_{ij})$  & probability of $n_ij$ failures occurring of design $j$ in component $i$ during period $[0, T]$ \\
+$PC(\boldsymbol{x})$ & expected penalty cost due to downtime exceeding $D_{0}$ \\
+%$C_f$    & average repair cost in period $[0, T]$
+
+	\end{tabular}
+  %\end{center}
+	 \subsection{Assumptions}
+	
+   \begin{enumerate}
+   \item The components in discussion are both critical components. If a component fails, the entire system will stop functioning.
+  \item The system will be functioning for $T$ years. The exploitation phase is denoted by $[0, T]$. We assume that the system are sold at time $t=0$, and the design cost is also incurred at time $t=0$.
+  \item During the exploitation phase of the system $[0, T]$, its total downtime should be less than or equal to $D_0$ years. If the total downtime exceeds $D_0$ years, the OEM will be charged for a penalty cost with respect to the extra downtime and the penalty rate $c_p$.
+	 \item The failure rates of the components are uncertain in the design phase and distributed with the same general distribution function. Components from different rough designs have different failure rate distributions parameters and design costs. Component $i$ from the rough design of supplier $j$ has the failure rate $\Lambda_{ij}$ with mean $\mu_{ij}$ and variance $\sigma_{ij}^2$ and acquisition costs $c_{ij}$.
+	 \item The life time of each the component is independent and exponentially distributed. So the number of the system failures over $[0, T]$ has a Poisson distribution with the system failure rate $\Lambda$.
+	\item	Once the rough design of a component has been chosen, the value of the component failure rate remains fixed before and after replaced by other new components.
+  \item When a failure occurs, a repair will be performed. The failed part will be replaced by a ready-to-use part (repair by replacement)from the secondary supplier. The failure rate remains the same after the replacement. The repair cost $c_r^{ij}$ is fixed for each rough design.
+ 	
+	\end{enumerate}
+\section{Problem description}
+During the design phase of a system, engineers have to select a certain design from all the possible alternatives for each critical component in the system. Suppose the system is comprised of $n$ critical components. If one of these critical components fails, the system as a whole stops working. Then the system can be seen to have a series system structure. For each critical component $i \in \{1,2,...,n\}$, one rough design needs to be selected from the set of all the possible alternatives, which is denoted by $\{1,2,...,m_i\}$. Each rough design candidate of component $i$ in the set $\{1,2,...,m_i\}$ has different uncertain reliability parameters and cost parameters. We aim to find out the optimal combination of rough designs for the system with respect to the average total cost over the service period $T$ of a PBL contract.
+
+The lifetimes of the components are assumed to be independent and exponentially distributed. Then for a certain rough design $j$ of component $i$ ($i \in \{1,2,...,n\}$, $j \in \{1,2,...,m_i\}$), we denote its failure rate as $\Lambda_{ij}$, which can fully describe its failure process when its lifetime distribution is exponential. However, as we mentioned in the introduction section, the outcome of any development process for a certain design is uncertain. Therefore, the failure rate $\Lambda_{ij}$ of a certain rough design $j$ for component $i$ is usually not known for sure before the development of the rough design. We use a certain distribution with a probability density function $f_{\Lambda_{ij}}(.)$ or a probability mass function $p_{\Lambda_{ij}}(.)$ to describe the random failure rate $\Lambda_{ij}$ before the development of the rough design, which reflects the prior belief/information about the reliability uncertainty of the technologies used in the rough design. In the evaluation of the average total cost over the service period $T$, these design uncertainties will be taken into account for different combinations of rough designs.
+
+The system will be sold together with a PBL contract over a service period $T$. The OEM is responsible for all the repairs within the service period, as a PBL contract. Moreover, the system availability should be above a predetermined level for the whole service period. Or in other words, the total downtime of the service period should be lower than a predetermined value $D_0$. A penalty cost will be paid to compensate the customer if the total downtime exceeds the predetermined level. As a result, the average total cost of a system over $T$ consists of three parts: (a) design cost, (b) repair cost, and (c) penalty cost. A detailed description of the evaluation of these cost elements are given in the following subsections.
+
+
+
+\subsection{Design cost}
+	
+	Let $c^{ij}_{a}$ denote the cost of purchasing component $i$ from supplier $j$. Define binary decision variable $x_{ij}$ as:
+	\[ x_{ij} = \left \{
+	  \begin{array} {l l}
+		0 & \quad \text {not purchasing component $i$ from supplier $j$} \\
+		1 & \quad \text {purchasing component $i$ from supplier $j$}
+		\end {array} \right.\]
+		then the design cost for component $i$ is given by:
+	 \begin{eqnarray}
+	A(\boldsymbol{x_{i}})=\sum^{m_{i}}_{j=1} {c^{ij}_{a} x_{ij}}
+		 \end{eqnarray}
+And the total design cost for the system is given by:
+\begin{eqnarray}
+	A(\boldsymbol{x})=\sum ^{n}_{i=1}A(\boldsymbol{x_{i}})=\sum ^{n}_{i=1}\sum^{m_{i}}_{j=1} {c^{ij}_{a} x_{ij}}
+\end{eqnarray}
+Assume we only select one supplier for each component, which means $\sum^{m_{i}}_{j=1}{x_{ij}=1}$.	
+	
+	\subsection{Repair cost}
+	
+When a failure occurs in period $[0, T]$, a repair will be performed by the OEM. The cost for each repair is $c_r^{ij}$. For a single component $i$, the expect number of repairs for $i$ during $[0,T]$, $N(\boldsymbol{x_{i}})$ is given by (Barlow and Proschan 1967):
+%$E[N_{i}(T)]$
+\begin {eqnarray}
+N(\boldsymbol{x_{i}})=\int_0^{T}\int_{-\infty}^{\infty}{{\lambda}_{i}f_{\Lambda_{i}}({\lambda}_{i})d{\lambda}_{i}dt}=\mu_{i}T=\sum_{j=1}^{m_{i}}{\mu_{ij}x_{ij}}T
+\end {eqnarray}
+Where $\Lambda_{i}=\sum_{j=1}^{m_{i}}{\Lambda}_{ij}x_{ij}$. Then we have the total expected repair costs for component $i$ as:
+\begin {eqnarray}
+R(\boldsymbol{x_{i}})=N(\boldsymbol{x_{i}})\sum_{j=1}^{m_{i}}{c_r^{ij}x_{ij}}=\sum_{j=1}^{m_{i}}{\mu_{ij}c_r^{ij}x_{ij}}T
+\end {eqnarray}
+
+Given that the reliability function of each component is independent and exponentially distributed, the expected system repair costs in $[0,T]$ is
+\begin {eqnarray}
+R(\boldsymbol{x})=\sum_{i=1}^{n}R(\boldsymbol{x_{i}})=\sum_{i=1}^{n}\sum_{j=1}^{m_{i}}{\mu_{ij}c_r^{ij}x_{ij}}T
+\end {eqnarray}
+
+\subsection{Penalty cost}
+When the total system downtime exceeds the predetermined value according to the PBL contract, a penalty cost should be paid by the OEM to customers. Assume that each time when the system is down, there is only one component failed, we exclude the probability that two or more than two component are failed at the same time. Then for each single stage,the failures occur according to a Poisson process with an uncertain arrival rate $\Lambda_i$. The probability that $n_{ij}$ failures occur during $[0, T]$ in design $j$ of stage $i$ is:
+\begin {eqnarray}
+P(x_{ij},n_{ij})&=&\int^{\infty}_{0}{Pr\{N=n_{ij}|\Lambda_{ij}=\lambda_{ij}\}f_{\Lambda_{ij}}(\lambda_{ij})d\lambda_{ij}} \nonumber\\
+&=&\frac{1}{\sqrt{2\pi \sigma_{ij}^{2}}}\int^{\infty}_{0}{\frac{e^{-\lambda T}(\lambda_{ij} T)^{n_{ij}}}{n_{ij}!}e^{-\frac{(\lambda_{ij} -\mu_{ij})^{2}}{2\sigma_{ij}^{2}}}d\lambda_{ij}}
+\end {eqnarray}
+So the expected downtime for stage $i$ is:
+\begin{eqnarray}
+D(\boldsymbol{x_{i}})=\sum_{j=1}^{m_{i}}{x_{ij}\sum_{n_{ij}=1}^{\infty}{P(x_{ij},n_{ij})r_{ij}n_{ij}}}
+\end{eqnarray}
+%So the expected downtime cost for stage $i$ is given as:
+%\begin {eqnarray}
+%D(\boldsymbol{x_{i}})=\sum_{j=1}^{m_i}{P(x_{ij})r_{ij}n}
+%\end {eqnarray}
+Given that $c_p$ is the penalty cost, $r_{ij}$ is the repair time for failure of design $j$ in stage $i$, $D_0$ is the predetermined system downtime in total, we find the expected penalty cost due to extra downtime exceeding $D_0$ of the system as,
+\begin{eqnarray}
+PC(\boldsymbol{x})=(\sum_{i=1}^{n}{D(\boldsymbol{x_{i}})-D_{0}})c_{p}
+\end{eqnarray}
+
+%\begin {eqnarray}
+%PC(\boldsymbol{x})=\sum_{n_{i}=0}^{\infty}{P(\boldsymbol{x_{i}})(n_{i}r-D_{0})^{+}c_{p}}=\sum_{n_{i}=\lceil \frac{D_{0}}{r} \rceil}^{%\infty}{Pr\{N=n_{i}\}(n_{i}r-D_{0})c_{p}}
+%\end {eqnarray}
+%
+%where $(n_{i}r-D_{0})^{+}=max\{0,n_{i}r-D_0\}$.
+%
+%Then we have the total penalty costs as:
+%\begin {eqnarray}
+%PC(\boldsymbol{x})=\sum_{i=1}^{n}{PC(x_{i})}=\sum_{i=1}^{n}\sum_{n_{i}=\lceil \frac{D_{0}}{r} \rceil}^{\infty}{Pr\{N=n_{i}\}(n_{i}r-D_{0})c_{p}}
+%\end {eqnarray}
+
+\subsection{Problem formulation}
+We formulate our problem as
+\begin{eqnarray}
+\text{(P)} \hspace{15mm} &\text{ min }& \hspace{10mm} \pi(\boldsymbol{x}) \nonumber\\
+& \text{ s.t. }&  \hspace{5mm} \sum_{j=1}^{m}{x_{ij}}=1 \nonumber
+\end{eqnarray}
+where $\pi(\boldsymbol{x})$ is the expected LCC for the system and obviously, we have:
+\begin{eqnarray}
+\pi(\boldsymbol{x}) &=& A(\boldsymbol{x})+R(\boldsymbol{x})+PC(\boldsymbol{x}) \nonumber\\
+&=& \sum_{i=1}^{n}{A(\boldsymbol{x_{i}})}+\sum_{i=1}^{n}{R(\boldsymbol{x_{i}})}+(\sum_{i=1}^{n}{D(\boldsymbol{x_{i}})-D_{0}})c_{p}
+\end{eqnarray}
+
+%\subsubsection{}
+	
+   	
+\end{document}
