@@ -1,0 +1,702 @@
+\documentclass[preprint,authoryear,12pt]{elsarticle}
+\usepackage{amsthm}
+\usepackage{amssymb}
+%\usepackage{morefloats}
+\usepackage{graphicx}
+%\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+%\usepackage{epsfig}
+\usepackage{latexsym} 
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+\setlength{\abovecaptionskip}{1ex} 
+\setlength{\floatsep}{1ex} 
+\setlength{\intextsep}{1ex} 
+\begin{document}
+\nocite{*}
+\begin{frontmatter}
+\title{The Share-a-Ride Problem:\\People and Parcels Sharing Taxis}
+\author[label1]{Baoxiang Li \corref{cor1}}
+\author[label1]{Dmitry Krushinsky}
+\author[label2,label3]{Hajo A. Reijers}
+\author[label1]{Tom Van Woensel}
+
+
+\cortext[cor1]{Corresponding author. Email: \href{mailto: B.li@tue.nl}{B.li@tue.nl}, Tel:+31 (0)402472693, Postal address: Paviljoen E18, Den Dolech 2, Eindhoven University of Technology, 5612 AZ Eindhoven, The Netherlands}
+
+\address[label1]{Department of Industrial Engineering and Innovation Sciences, Eindhoven University of Technology, Eindhoven, The Netherlands}
+\address[label2]{Department of Mathematics and Computer Science, Eindhoven University of Technology, Eindhoven, The Netherlands}
+\address[label3]{Perceptive Software, Apeldoorn, The Netherlands}
+
+\begin{abstract}
+New city logistics approaches are needed to ensure efficient urban mobility for both people and goods. Usually, these are handled independently in dedicated networks. This paper considers conceptual and mathematical models in which people and parcels are handled in an integrated way by the same taxi network. From a city perspective, this system has a potential to alleviate urban congestion and environmental pollution. From the perspective of a taxi company, new benefits from the parcel delivery service can be obtained. We propose two multi-commodity sharing models. The Share-a-Ride Problem (SARP) is discussed and defined in detail. A reduced problem based on the SARP is proposed: the Freight Insertion Problem (FIP) starts from a given route for handling people requests and inserts parcel requests into this route. We present MILP formulations and perform a numerical study of both static and dynamic scenarios. The obtained numerical results provide valuable insights into successfully implementing a taxi sharing service.
+\end{abstract}
+
+\begin{keyword}
+Transportation \sep Share-a-Ride Problem  \sep Freight Insertion Problem \sep Multi-commodity \sep Taxi
+\end{keyword}
+\end{frontmatter}
+
+\section{Introduction}
+\label{Introduction}
+In many real-life situations, especially in urban areas, people and freight transportation operations are handled separately. Little research is available on the efficiency gains that can be obtained by combining individual freight and passenger transportation streams. A lack of real-time information and the increased planning complexity due to such a combination are among the main reasons. Our research fills in this gap and explores People and Freight Integrated Transportation problems (PFIT problems) with a particular focus on taxis. As such, this paper focuses on the integration of these two distinct networks. Combining people and freight flows creates attractive business opportunities because the same transportation needs can be met with fewer vehicles and drivers. In order to facilitate effective people-freight flows, efficient planning models are needed to deal with these challenging environments. 
+
+The goal of this paper is to study the potential benefits and drawbacks of combining people and parcel flows using taxis. To achieve this goal, we propose two models for scheduling such a combined system and perform a numerical study using real taxi trail data \citep{TaxiSFOnline}, as shown in Figure \ref{fig_TrailsSF}. Note that this figure reflects the trails of 528 taxis in San Francisco, based on historical data of one month.
+
+\begin{figure} [!htbp]
+\centering
+\vspace{-2em}
+\includegraphics [angle=90,width=0.60\textwidth]{SF_tra.pdf}
+\vspace{-2em}
+\caption{Trails of taxis in San Francisco (darker regions mean higher density of trails)}
+\label{fig_TrailsSF}
+\end{figure}
+\vspace{0em} 
+
+The developed models are based on the well-known Dial-a-Ride Problem \citep{Cordeau}. Dial-a-Ride problem (DARP) consists of designing vehicle routes and schedules for a number of users who specify delivery requests as defined by pickup and drop-off points. The aim is to plan a set of minimum cost vehicle routes capable of accommodating as many users as possible, under a set of constraints. DARP arises in many practical application areas, for instance, taxi and courier services, transportation of elderly and disabled persons, etc. The key difference in this paper as compared to the original DARP formulation is the possibility of combining people and parcels together in the same taxi: people have different requirements and objectives (lead time, allowed delay, travel time, etc.) than parcels when being transported.
+
+A key contribution of this paper is to establish models that introduce these different requirements and objectives into the DARP. Similar to the DARP, we denote this new class of models as Share-a-Ride Problem (SARP), referring to the fact that people and parcels share the same taxis. We present MILP formulations for the SARP, solved exactly using GUROBI. Due to the complexity of the problem, we can solve only small SARP instances. To attend a higher level of realism, we provide numerical results for the SARP under a dynamic environment.
+%That is why our numerical study is focused on the FIP.
+
+A reduced problem based on the SARP, denoted as the Freight Insertion Problem (FIP), starts from a given route for handling the people requests and inserts the parcel requests into this route. As such, the FIP, based on the SARP, has a reduced complexity (the routing is given, only the scheduling/timing needs to be done) that can be solved reasonably fast for realistic instances.
+
+This paper is organized as follows. In Section \ref{sec_review}, we provide a literature review. The descriptions of  the SARP and FIP are presented in Section \ref{sec_problem}. We discuss the static SARP model formulations and dynamic framework in Section \ref{sarp_model}. Then, in Section \ref{fip_model}, we develop the model formulation for the FIP. Section \ref{sec_settings} summaries experimental settings. The numerical results are presented in Section \ref{sec_results}. Section \ref{sec_conclusions} concludes the paper with a summary and directions for future research.
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Literature review}\label{sec_review}
+In recent years, there has been an increasing interest in people and freight sharing systems. A comprehensive survey on sharing transport between people and freight was conducted by \cite{Trentini}, who mainly provide relevant concepts and solutions in order to improve urban mobility. The solutions listed show the possibility of using sharing resources over different modes (e.g., using a tram for freight transportation). Traditionally, these modes are not connected to each other. According to the classification of these authors, our research falls in the branch of car-sharing.
+
+According to the research of \cite{Agatz}, car-sharing assumes that requests need to share vehicles with others, and similar requests are grouped (with similar original and destination points), then assigned to the vehicles. Car-sharing is usually considered in terms of matching problems rather than scheduling problems. In other words, traditional car-sharing matches individuals who are close in time and space. The objective of car-sharing is to maximize the number of matching between drivers and riders. From a modeling point of view, these works mainly focus \citep[see, e.g., ][]{Agatz} on a matching between: (i) a single driver and multiple riders, (ii) multiple drivers and a single rider, (iii) multiple drivers and multiple riders. The models are solved mainly using heuristic or agent-based simulation methods. The reason is that car-sharing is usually related to large amounts of data, which are difficult to be included when using exact methods. \cite{Agatz2011} considered the problem of matching drivers and riders in a dynamic setting. They presented a simulation study based on travel demand data from the Atlanta Metropolitan area. \cite{Quadrifoglio}  proposed a bus sharing system named MAST (Mobility Allowance Shuttle Transit). The MAST service has a fixed base route that covers a specific geographic zone with one or more mandatory checkpoints. Its innovative feature is that, given an appropriate slack time, buses are allowed to deviate from the fixed path to pick up and drop off passengers at their desired locations within a predetermined service area.
+
+From the modeling viewpoint, our problem is similar to the DARP. The aim of DARP is to plan a set of minimum cost vehicle routes, under a set of constraints\citep{Cordeau}. The research on DARP can be divided into two domains based on the information about requests: static and dynamic. In the static case all the requests are known beforehand. In the dynamic case the transportation requests are not known, or only partially known in advance. Study of the DARP started in the late 1960s. Since then several versions of the DARP have been proposed and several techniques were developed to solve the problem. \cite{Psaraftis} formulated and solved the single vehicle DARP using a dynamic program in which the objective function is the minimization of the weighted sum of route completion time and customer dissatisfaction. This paper provided an exact algorithm for solving DARP, but they could only solve small instances. Concerning heuristic algorithms for DARP, the work by \cite{Jaw} is a pioneering research within the area of DARP and most of the following studies in this area are based on this work. In that paper, a sequential insertion heuristic algorithm for solving the static DARP is described. For a more comprehensive review of DARP, we refer the reader to \cite{Cordeau} where a summary on the related algorithms is presented.
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Problem description}\label{sec_problem}
+The problem under consideration can be described as follows. A number of taxis drive around in a city to serve transportation requests coming from people. For the static case, these requests are known beforehand (i.e., origin, destination and start time for each person). The taxis then follow some trajectories in order to serve all these requests, as shown in Figure \ref{fig_TrailsSF} (which is based on historical data). This is, for example, the case for Connexxion\footnote{http://taxi.connexxion.nl/} (a transportation company in the Netherlands) where a large amount of requests are known beforehand. Furthermore, taxis are allowed to deliver some freight (parcels) in case it does not affect their passengers significantly. 
+
+A number of possible situations arise: (1) the taxi carries a person only; (2) the taxi carries a parcel only; (3) the taxi carries both a person and a parcel together. Persons have priority over parcels. This last observation has consequences for the routing of a taxi, but also for the expected extra time needed for picking a parcel. Note that in urban environments, the average time of a taxi trip is around $14$ minutes \citep{TaxiSFOnline}. Thus, only small deviations from this average travel time are acceptable to human passengers. 
+
+\cite{Kamar} mentioned several reasons causing a poor performance of existing ride-sharing projects. Personal security and convenience concerns make people reject taking a trip with strangers: people are concerned about gender, age, smoking preference, etc. In our problem definition, we do not allow serving two passenger requests simultaneously by one taxi. Furthermore, people and parcels have different characteristics and required levels of service. The price for people delivery versus parcels delivery is different, too. We assume that a single passenger will refuse to pay for the trip if the taxi stops too many times or if the travel time exceeds the direct ride time significantly.
+
+Based on this problem description, we build two mathematical models for the SARP and the FIP. Figure \ref{fig_fipandsarp} describes the settings of the two problems. The figure illustrates the main difference between the two models: all requests are flexible in the SARP, but in the FIP the routes are partially fixed beforehand based on the passenger requests. The details are described in the following two paragraphs.
+
+\begin{figure} [htp]
+\centering
+\includegraphics [width=0.55\textwidth]{fipandsarp.pdf}
+\caption{An illustrative example of the SARP and the FIP}
+\label{fig_fipandsarp}
+\end{figure}
+\vspace{0em} 
+
+The SARP assumes that a parcel can be served by at most one taxi, with the possibility of not been served at all. In the latter case, the ``traditional'' parcel service using a dedicated freight network must be used. Either a vacant or a busy taxi can be chosen for a passenger or parcel requests. 
+
+Our problem involves planning a fixed number of taxi routes capable of accommodating all the people and as much freight (expressed as the number of parcels) as possible, under a given set of constraints (related to pickup and delivery times, capacity of a taxi, etc.). Note that people are different from parcels in terms of their requirements: the pickup and delivery times for people are more critical than those for freight; some combinations of parcels might not be allowed/possible; the length of a detour for picking up parcels might not be acceptable; the costs/benefits from parcels and people also differ; various priorities exist, etc. If the situation permits, a parcel can be picked up or delivered during the passenger service. In that case, the passenger waits inside the taxi during the parcel service. In general, several parcels (and a single passenger) may reside in a taxi at the same time. By contrast, two passengers cannot be served simultaneously by one taxi. We assume that the taxi company tries to maximize its total profit obtained from serving both people and parcel requests. 
+
+The FIP has the same settings as the SARP but with an additional assumption: the assignments of passengers to taxis and sequences of their services are given. For a taxi, a new parcel request can be picked up or delivered during the passenger service. The passenger waits inside the taxi during the parcel service time.
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{The Share-a-Ride Problem}\label{sarp_model}
+This section presents the mathematical formulations for the SARP and the FIP models. First of all, let us clarify some notions that will be used throughout the rest of the paper. Each service request (a passenger or a parcel) is associated with two spatial points where a taxi has to stop: its origin, where a passenger or a parcel is picked up, and the destination. We will use the word \emph{stop} to refer to either the origin or destination of a passenger or a parcel. Furthermore, we assign to each stop a unique index, even though some of them may refer to the same point in space. Within this setting each request is uniquely defined by its origin, and we will use a shortcut ``request $i$'' to denote a passenger or a parcel picked up at stop $i$. Table~\ref{notation} lists all the relevant parameters and variables used.
+
+%\newpage%debug only
+
+%\begin{savenotes}%debug only
+\begin{table*}
+%\scriptsize%debug only
+\caption{Parameters and variables for the SARP and the FIP models}
+\small
+\begin{tabular}{ll}
+\hline
+%    & Explanation\\
+%\hline
+$n,m$ & Number of passengers and parcels, respectively\\
+$K$   & Set of taxis, $K=\{1,2,\ldots,|K|\}$\\
+$V^p$ & Set of passenger stops\\
+$V^f$ & Set of parcel (freight) stops\\
+$V^p\cup V^f$ & Set of all stops, $V^p\cup V^f$ = $\{1,2,\ldots,2\sigma\}$, $\sigma=m+n$\\
+$V$ & $=V^p\cup V^f \cup \{0,2\sigma+1\}$, $0$ and $2\sigma+1$ represent the origin and the destination\\
+& of a taxi (i.e., depots), respectively\\
+$V^{p,o}$ & Set of passenger origins $V^{p,o}$ = $\{1,2,\ldots,n\}$\\
+$V^{p,d}$ & Set of passenger destinations $V^{p,d}$ = $\{\sigma+1,\sigma+2,\ldots,\sigma+n\}$ \\
+$V^{f,o}$ & Set of parcel origins $V^{f,o}$ = $\{n+1,n+2, \dots, \sigma\}$\\
+$V^{f,d}$ & Set of parcel destinations $V^{f,d}$ = $\{\sigma+n+1,\sigma+n+2,\ldots,2\sigma\}$\\
+$q_i$ & Weight of request $i$\\
+$d_i$ & Distance from the origin to the destination for the request $i$, \\
+      & i.e., distance between stops $i$ and $i+\sigma$\\
+$[e_i, l_i]$& Time window for request $i$\\
+$Q_{k}$ & Capacity of taxi $k$\\
+$T_k$ & Maximum duration of parcel service for taxi $k$\\
+$h_k$ &Quantity of passengers served by taxi $k$\\
+$H_k$ & Set of passengers served by taxi $k$, $H_k$ = $\{1,2,\ldots\,h_k\}$\\
+$C$ & Set of pairs $(i,j)$, which $i$ and $j$ define a pair of subsequently served requests \\
+$\eta$ & Maximum number of requests between one passenger service\\
+$d_{ij}$& Distance between stops $i$ and $j$\\
+$t_{ij}$& Travel time between stops $i$ and $j$\\
+$\Delta d_{ij}^{k}$ & Extra travel distance for taxi $k$ if parcel $j$ is inserted between \\
+& passengers $i$ and $i+1$\\
+$\Delta t_{ij}^{k}$ & Extra travel time for taxi $k$ if parcel $j$ is inserted between \\
+&passengers $i$ and $i+1$: $\Delta t_{ij}^{k}=\Delta d_{ij}^{k}$/average speed\\
+$\varpi_i$ & Maximum delivery time for request $i$\\
+$\alpha$ & Initial fare charged for delivering one passenger\\
+$\beta$  & Initial fare charged for delivering one parcel\\
+$\gamma_1$ & Fare charged for delivering one passenger per kilometer\\
+$\gamma_2$ & Fare charged for delivering one parcel per kilometer\\
+$\gamma_3$ & Average cost per kilometer (fuel, tolls, etc.) for delivering requests\\
+$\gamma_4$ & Discount factor for exceeding the direct delivery time of passengers\\
+\hline
+$X_{ij}^{k}$ & Binary decision variables equal to 1 if taxi $k$ goes
+directly from stop $i$ to stop $j$\\
+$\tau_i^k$& Time point when taxi $k$ arrives at stop $i$\\
+$r_i^k$& Time spent by request $i$ in taxi $k$, $r_i^k=\tau_{i+\sigma}^k-\tau_{i}^k$, $i\in C$\\
+$w_i^k$& Load of taxi $k$ after visiting stop $i$\\
+$P_i$ & Index of request $i$ in a service sequence of a taxi\\
+\hline
+\end{tabular}
+\label{notation}
+\end{table*}
+%\end{savenotes}%debug only
+
+
+
+\subsection{The static Share-a-Ride Problem formulation}
+\label{ssarp_model}
+The demands of passengers and parcels are defined by a set of requests. Let $\sigma$ denote the number of requests to be served, which include $m$ parcels and $n$ passengers. The SARP is defined on a complete undirected graph $\mathcal{G} = (V,E)$ where $V = V^p\cup V^f \cup \{0,2\sigma+1\}$. Subsets $V^p$ and $V^f$ correspond to passenger and parcel stops, respectively, while nodes $0$ and $2\sigma + 1$ represent the origin and destination depots. For easy referencing, we arrange all stops in $V$ in such a way that all origins precede all destinations, origins of passengers precede origins of parcels, and destinations of passengers precede those of parcels. Furthermore, the destination of each request can be obtained as its origin offset by a fixed constant $\sigma$.
+
+Let $K$ be the set of vehicles, each vehicle $k \in K$ has a capacity $Q_k$ and the total duration of its route cannot exceed $T_k$. Each stop $i$ is associated with a load $q_i$ such that $q_0 = q_{2\sigma+1} = 0$, $q_i = -q_{i+\sigma}$ ($i = 1,2,\ldots,\sigma$). A time window $[e_i,l_i]$ is also associated with node $i \in V$ where $e_i$ and $l_i$ represent the earliest and latest time, respectively. With each edge $(i,j) \in E$ are associated a distance $d_{ij}$ and a travel time $t_{ij}$.
+
+For each arc $(i,j) \in A$ and each vehicle $k \in K$, let $X_{ij}^{k} = 1$, if vehicle $k$ travels from node $i$ directly to node $j$. For each node $i \in V$ and each vehicle $k \in K$, let $\tau_i^k$ be the time that vehicle $k$ begins to serve node $i$, and $w_i^k$ be the load of vehicle $k$ after visiting node $i$. For each passenger $i$ $(i\in V^{p,o})$, let $r_i^k$ be his/her ride time on vehicle $k$, the maximum ride time of $i$ is denoted by $\varpi_i$. The initial profit obtained from a passenger and a parcel are represented by $\alpha$ and $\beta$, respectively; while the average profit per kilometer are denoted by $\gamma_1$ and $\gamma_2$.
+Moreover, the cost per kilometer is $\gamma_3$. The discount factor for exceeding the direct delivery time of passengers is represented by $\gamma_4$. Finally, we use variables $P_i\in \{1,2,\dots,2(m+n+1)\}$ to define the serving sequence of taxis, and the maximum number of requests that can be served between one passenger is defined by $\eta$.
+
+Given these notations, the formulation of the SARP is as follows:
+\vspace{-1em}
+\begin{eqnarray}
+\max\left[ \sum\limits_{i\in V^{p,o}}\sum\limits_{j\in V}\sum\limits_{k\in K}(\alpha+\gamma_1 d_{i,i+\sigma})X_{ij}^{k}
++\sum\limits_{i\in V^{f,o}}\sum\limits_{j\in V}\sum\limits_{k\in K}(\beta+\gamma_2 d_{i,i+\sigma})X_{ij}^{k}\right.\nonumber\\
+\left.-\gamma_3 \sum\limits_{i\in V}\sum\limits_{j\in V}\sum\limits_{k\in K} d_{ij}X_{ij}^{k}
+-\gamma_4 \sum\limits_{i\in V^{p,o}}\sum\limits_{k\in K} (r_i^k /t_{i,i+\sigma}-1)\right]
+\label{sarp:0}
+\end{eqnarray}
+
+
+Subject to:
+\vspace{-1em}
+\begin{eqnarray}
+\sum\limits_{j\in V}\sum\limits_{k\in K}X_{ij}^{k} &\leq& 1, ~~ \forall~i\in V^{p,o}\cup V^{f,o} \label{sarp:1}\\
+\sum\limits_{i\in V}X_{0,i}^{k}= \sum\limits_{i\in V}X_{i,2\sigma+1}^{k} &=& 1, ~~\forall~k\in K  \label{sarp:2}\\
+\sum\limits_{i\in V}X_{i,0}^{k}= \sum\limits_{i\in V}X_{2\sigma+1, i}^{k} &=& 0, ~~\forall~k\in K  \label{sarp:3}\\
+\sum\limits_{i\in V}X_{ij}^{k} &=& \sum\limits_{i\in V}X_{i,j+\sigma}^{k}, ~~ \forall~j\in V^{p,o}\cup V^{f,o},~k\in K \label{sarp:4}\\
+\sum\limits_{j\in V}X_{ij}^{k} &=& \sum\limits_{j\in V}X_{ji}^{k}, ~~ \forall~i\in V^p\cup V^f,~k\in K \label{sarp:5}\\
+\tau_j^k &\geq& (\tau_i^k + t_{ij})X_{ij}^{k},   ~~ \forall~i,j\in V,~k\in K \label{sarp:6}\\
+w_j^k &\geq& (w_i^k + q_{j})X_{ij}^{k},    ~~ \forall~i,j\in V,~k\in K \label{sarp:7} \\
+r_{i}^{k} &=& \tau_{\sigma+i}^k- \tau_{i}^k, ~~\forall~i\in V^{p,o}\cup V^{f,o},~k\in K \label{sarp:8}\\
+T_k & \geq & \tau_{2\sigma+1}^{k}-\tau_{0}^{k}, ~~\forall~k\in K \label{sarp:9}\\
+e_i~\leq~ \tau_{i}^{k} &\leq& l_i ,~~\forall~i\in V,~k\in K \label{sarp:10}\\
+t_{i,\sigma+i}~\leq~r_i^k &\leq& \varpi_i,~~\forall~i\in V^{p,o},~k\in K \label{sarp:11}\\
+w_i^k &\geq & \max\{0,q_i\},~~\forall~i\in V,~k\in K \label{sarp:12}\\
+w_i^k &\leq & \min\{Q_k,Q_k+q_i\},~~\forall~i\in V,~k\in K \label{sarp:13}\\
+M(\sum\limits_{k\in K}X_{ij}^k-1)+P_j-1&\leq& P_i, ~~\forall~i, j\in V^p\cup V^f\label{sarp:14}\\
+M(1-\sum\limits_{k\in K}X_{ij}^k)+P_j-1&\geq& P_i, ~~\forall~i, j\in V^p\cup V^f\label{sarp:15}\\
+P_{j+\sigma}-P_j-1 &\leq& \eta, ~~\forall~j\in V^{p,o}\label{sarp:16}\\
+X_{ij}^k \in \{0,1\};~\tau_i^k,r_i^k,w_i^k &\in& \mathbb{R}_+;~P_i\in [0,2(m+n)]
+\end{eqnarray}
+%\end{thisnote}
+
+The objective function (\ref{sarp:0}) maximizes the total profit that equal to the profit obtained from people and parcel delivery minus the costs. The costs include four parts: (i) the first part  related to the profit obtained from passengers; (ii) the second part related to the profit obtained from parcels; (iii) the second part related to cost from the distance traveled; (iv) the last part related to extra ride time of passengers compared to the direct delivery.
+
+Every request can be served at most once by one taxi as defined in constraints (\ref{sarp:1}) and (\ref{sarp:4}). Constraints (\ref{sarp:2}) and (\ref{sarp:3}) fix the original and destination points of taxis. Every stop except the origin and the destination of a taxi must have one preceding and one succeeding stop, which is defined in constraints (\ref{sarp:5}). Constraints (\ref{sarp:6}) and (\ref{sarp:7}) compute the travel times and loads of taxis, respectively. Constraints (\ref{sarp:8}) define the ride time of requests. Constraints  (\ref{sarp:9}) limit the working hours of taxi drivers. The time window constraints are defined in (\ref{sarp:10}). Constraints  (\ref{sarp:11}) ensure that any passenger request must be processed within a given time period, and the passenger origin is visited before the destination. Taxi capacities are defined using constraints (\ref{sarp:12}) and (\ref{sarp:13}). Constraints (\ref{sarp:14})-(\ref{sarp:15}) define that the service sequence of the requests.
+Constraints (\ref{sarp:16}) guarantee that a passenger service has a higher priority: we can insert at most $\eta$ requests between the pickup and drop-off point of a passenger ($\eta \in \{0,1,2,...\}$). 
+
+This formulation is not linear due to constraints (\ref{sarp:6}) and (\ref{sarp:7}). The constants $M_{ij}^{k}$ and $W_{i}^{k}$ are introduced to linearise these constraints:
+
+\begin{eqnarray}
+\tau_j^k -\tau_i^k\geq  t_{ij}+M_{ij}^{k}(X_{ij}^{k}-1)    ~~ \forall~i,~j\in V^p\cup V^f,~k\in K  \label{sarp:18}\\
+w_j^k -w_i^k\geq q_{i}+W_{i}^{k}(X_{ij}^{k}-1)    ~~ \forall~i,~j\in V^p\cup V^f,~k\in K  \label{sarp:19}
+\end{eqnarray}
+
+The validity of these two constraints is ensured by setting $M_{ij}^{k}\geq \max \{0,l_i+t_{ij}-e_j\}$ and $W_{i}^{k} \geq \min\{2 Q_k,2 Q_k+q_i\}$. For constraints (\ref{sarp:15}) and (\ref{sarp:16}), the validity is ensured by setting $M=2(m+n+1)$.
+
+In this model, we considered the delivery of both people and parcels. Unlike the DARP that usually assumes that the amount of cars is large enough for serving all the requests \citep[see, e.g., ][]{Cordeau}, the SARP allows rejections for both people and freight. If the people transportation network cannot serve all freight requests (e.g., the capacity is not large enough), some requests should be rejected and served by the freight network. Thus, the SARP implies cooperation between people and freight transportation networks. The traditional DARP model does not fulfil these requirements, which motivated us to build this SARP model.
+\subsection{The Dynamic Share-a-Ride Problem}
+\label{sec_dynamic}
+
+Instead of static scenarios, we can envision a more realistic dynamic case in which passengers are accepted or declined at a time of their call (as usually happens), and then inserting feasible parcels within their route. Parcels are known beforehand and available for insertion dynamically. In particular, it would be useful to find out by experimentation whether the static and dynamic setting produce comparable results or indicate similar behavior. In the dynamic experimental simulations, the following assumptions are made:
+
+\begin{itemize}
+\item The requests of passengers pop up randomly, the generated passenger information includes the pickup and delivery locations with their time windows. Once a passenger request pops up, a decision to accept this request or decline should be made immediately. If more than one taxi is available, the closest taxi will be chosen for passenger service.
+\item Total parcel demands are considered as given and fixed (include  pickup points, drop off points and time windows of parcels).
+\item For a given taxi, we only make schedule for the next 6 locations. There is a trade-off between the solution quality and the CPU time. It is time consuming to get an optimal solution for all the given requests, due to the complexity of solving the static case. Yet, even if we make a plan for the whole day, the schedule will be destructed by the new-coming passengers. 
+\end{itemize}
+
+Overall, the procedure includes three basic elements: passengers pop up one by one according to some sequence, a monitor to record the state (locations, arrive time, load) of taxis and the objective value, a neighborhood search subroutine to optimize the current routes. The procedure is defined as Algorithm \ref{algo:fram}.
+
+\begin{algorithm}
+\DontPrintSemicolon 
+
+\KwIn
+	{set $F = \{1,\ldots,m\}$ of parcels, set of taxis $K =\{1,\ldots,|K|\}$,  $R_k\gets \emptyset$ ($\{R_k\}_{k=1,\ldots,|K|}$ is the route of taxi $k$)}
+
+Generate initial route for every taxi sequentially using the Greedy Insertion Algorithm (see Algorithm \ref{algo:GIA}) 
+
+\For{all passengers $i$} 
+  {Update the states of all taxis when $i$ pops up, update $F$ (if $\exists k$ with $|R_{k}| = 0$ before passenger $i$ pops up, then insert unserved parcels into $k$ before update the state of taxi $k$)\;
+   Let $E$ be the set of the available taxis for passenger delivery\;
+   \uIf {$E \neq \emptyset$} 
+   		{
+		Select the closest taxi $k'\in E$ to $i$, let $S$ be the set that includes all the served requests, update route $k'$, $R_{k'} \gets (R_{k'} \cup i) \setminus S$, $F \gets F\setminus S$\;
+		Reinsert parcels and optimize the route $R_{k'}$ by neighborhood search (see Section \ref{algoNS})\;
+		}		
+  }		    
+   \uIf{$F \neq \emptyset$} 
+   		{
+	    Insert left parcels to the available taxis\;
+	    }
+   \Else{Terminate}
+\caption{The general procedure for the dynamic SARP simulation}
+\label{algo:fram}
+\end{algorithm}
+
+\begin{algorithm}
+\KwIn{set of served requests $R_s^+$ of route $s$, set of all unserved requests $R^-$,  $f(s_{best})=0$}
+
+$s' \gets s $
+	
+\While{$|R_s^+|< 6 $} 
+	{
+	\For{request $i \gets R^-$  }
+		{Check all the positions to insert request $i$, record the best objective $f(s)$ and the solution $s$
+
+		If $f(s_{best})<f(s)$, $f(s_{best})=f(s)$, update $s_{best}$
+		}
+	$s' \gets s_{best}$, update $R_s^+$ and $R^-$
+
+	} 
+		\KwOut{$s'$}
+\caption{The Greedy Insertion Algorithm}
+\label{algo:GIA}
+\end{algorithm}
+
+\subsubsection{Neighborhood search subroutine}  
+\label{algoNS}  
+We use a neighborhood search to extend and optimize the route. Every time, a randomly selected request is removed from the route, then the new selected requests (choose based on a greedy insertion algorithm) will be inserted into the route. Once a request is moved out from the route, it is forbidden to insert into the route in the next 5 iterations. Let $s$ be the current solution, $s'$ be the previous solution.
+$f(s)$ stands for the objective value of solution $s$. We accept the solution with probability $\min\{1,e^{(f(s)-f(s'))/T}\}$, where $s$ is the current solution, $s'$ is the solution of the previous iteration, and $T \geq 0$ is the temperature. The temperature starts at $T_0$ and decreases every iteration using the expression $T := T\cdot c$, where $c=0.99$ is the cooling rate. $T_0$ is defined in such a way that the objective value of the first iteration is accepted with probability 0.5.  The simulated annealing framework is the same as in \cite{Pisinger}.
+
+
+For initialization and optimization of a route, a greedy insertion heuristic is created to find a feasible solution (see Algorithm \ref{algo:GIA}). When calculating the arrival time of a taxi, we did not take into account that a taxi may wait at a stop in order to avoid extra waiting time during the following requests service process. The departure time of depot equals to the lower time window of the depot. Suppose the departure time of the request $i$ is defined by $\tau_i$, the time that a taxi begins to serve the subsequent request $j$ equals to $\min\{e_j,~\tau_i+t_{ij}\}$. 
+
+
+
+
+
+\section{The static Freight Insertion Problem formulation}
+\label{fip_model}
+
+The SARP is an extension of the DARP, which is an NP-hard problem \citep{Baugh}. The computational complexity of the SARP motivated us to define a reduced problem -- the FIP, that starts from a given route for handling people requests and inserts parcel requests into this route. The SARP model can change to the FIP model by adding constraints (\ref{fipg:20}) to guarantee the predefined passenger sequences.
+
+\begin{eqnarray}
+P_{j}-P_{i}&\geq& 1, ~~\forall~(i,j)\in C\label{fipg:20}
+\end{eqnarray}
+
+Furthermore, we reformulate the general FIP to a specified FIP, where only one parcel is allowed for insertion between passenger services (between the pickup and drop-off point of one passenger, or the drop-off of one passenger and the pickup point of another passenger). The FIP with one insertion can be solved reasonably fast for realistic instances.
+
+The predefined passengers set $V^p=\{1,\ldots,n,\sigma+1,\ldots,\sigma+n\}$ is decomposed into $H_1,H_2,\ldots,H_k$ ($H_k$ = $\{1,2,\dots,h_{k},\dots\,h_{|K|}\},~\forall k\in K)$ according to a fixed assignment of passengers to taxis and the sequences of their service. We use $H_k^o$ to denote the set of pickup stops of passengers. This conversion reduces the total number of constraints and variables  (e.g., variables $X_{ij}^k$). Furthermore, the distance and travel time between the passenger $i$ and $(i+1)$ in the predefined routing are denoted by $d_{i,i+1}^k$ and $t_{i,i+1}^k$, respectively. If a taxi starts from the original point of the first passenger and ends at the destination of the last passenger, constraints (\ref{sarp:2}) and (\ref{sarp:3}) can be dropped. Moreover, if at most one parcel is allowed for insertion between passenger services, constraints (\ref{sarp:14})-(\ref{sarp:16}) can be replaced by (\ref{fip:2}). For each taxi $k$, with each pair $(i,j)$, where $i$ is a passenger stop ($i\in H_k\setminus \{h_k\}$) served by taxi $k$ and $j\in V^f$, are associated extra distance $\Delta d_{ij}^{k}$ and extra time $\Delta t_{ij}^{k} $ induced by visiting stop $j$ between stops $i$ and $i+1$, where $\Delta d_{ij}^{k} = d_{ij}+d_{j,i+1}-d_{i, i+1}$. Other parameters and variables are the same as for the SARP model (see Table \ref{notation}).
+Finally, the fixed profit from serving the passengers can be eliminated from the objective function.  Thus, the specified FIP can be formulated as follows:
+\begin{eqnarray}
+\max\left[\sum\limits_{i\in H_k\setminus \{h_k\}}\sum\limits_{j\in V^f}\sum\limits_{k\in K}(\beta+\gamma_2 d_{i,i+\sigma}-\gamma_3 \Delta d_{ij}^{k})X_{ij}^{k}
+-\gamma_4 \!\!\!\!\sum\limits_{i\in H_k^o\setminus \{h_k\}}\sum\limits_{k\in K} (r_i^k /t_{i,i+1}-1)\right] \label{fip}
+ \end{eqnarray}
+ Subject to:\\
+ \begin{eqnarray}
+\sum\limits_{k\in K}\sum\limits_{i\in H_k}X_{ij}^{k} &\leq& 1,~~\forall~j\in V^f \label{fip:1}\\
+\sum\limits_{j\in V^f}X_{ij}^{k}&\leq& 1,~~\forall k\in K,~i\in H_k\setminus \{h_k\} \label{fip:2} \\
+\sum\limits_{i\in H_k\setminus \{h_k\}}X_{ij}^{k}&=&\sum\limits_{i\in H_k\setminus \{h_k\}}X_{i,j+m}^{k},~~ \forall~k\in K,~j\in V^{f,o} \label{fip:3}\\
+\sum\limits_{f<i}X_{fj}^{k}&\geq& \sum\limits_{f<i}X_{f,j+m}^{k},\nonumber\\
+&&~~\forall~k\in K,~j\in V^{f,o},~i\in H_k\setminus \{h_k\} \label{fip:4}\\
+\tau_{i+1}^{k}-\tau_i^k&\geq&t_{i,i+1}^k+\sum\limits_{j\in V^f}\Delta t_{ij}^k X_{ij}^{k},~~\forall k\in K,~i\in H_k\setminus \{h_k\} \label{fip:5} \\
+\tau_j&\geq&(\tau_i^k+t_{ij}^k)X_{ij}^k,~~\forall~k\in K,~i\in H_k\setminus \{h_k\},~j\in V^{f} \label{fip:6}\\
+\tau_{h_k}^k-\tau_1^k &\leq& T_k,~~\forall~k\in K \label{fip:7}\\
+e_i^k ~\leq~ \tau_i^k &\leq& l_i^k,~~\forall~k\in K,~i\in H_k \label{fip:8}\\
+e_j ~\leq~ \tau_j &\leq& l_j,~~\forall~j\in V^f \label{fip:9}\\
+\tau_{i+1}^{k}-\tau_i^k&\leq&\varpi_i,~~\forall k\in K,~i\in H_k^o\setminus \{h_k\} \label{fip:10} \\
+\sum\limits_{f\leq i}\sum\limits_{j\in V^f}X_{fj}^{k}q_j &\leq& Q_k-\sum\limits_{f\leq i}q_f,~~\forall~k\in K,~i\in H_k\setminus \{h_k\}  \label{fip:11}\\
+X_{ij}^k &\in & \{0,1\};~\tau_i^k,\tau_j \in \mathbb{R}_+
+\end{eqnarray}
+The objective function (\ref{fip}) maximizes the profit from parcel delivery minus the costs: the cost related to the extra distance for parcel delivery and extra ride time for passengers. Every parcel can be served at most once by one taxi as defined in constraints (\ref{fip:1}) and (\ref{fip:3}). At most one parcel can be inserted between passenger services as shown in constraints (\ref{fip:2}). Constraints (\ref{fip:4})  define that the parcel origin precedes its destination. Constraints (\ref{fip:5}) and (\ref{fip:6}) compute the travel times of taxis
+when reach a passenger and a parcel, respectively. Constraints (\ref{fip:7}) restrict the working hours of taxi drivers. The time window constraints of a passenger are defined in (\ref{fip:8}). The time window constraints of a parcel are defined in (\ref{fip:9}). Constraints (\ref{fip:10}) prevent the delivery time for passenger service exceeding the upper bound. Taxi capacity constraints are defined in (\ref{fip:11}).
+
+This formulation is not linear due to constraints (\ref{fip:6}). The constants $M_{i}^{k}$ are introduced to linearise these constraints:
+
+\begin{eqnarray}
+\tau_j -\tau_i^k\geq  t_{ij} X_{ij}^k+M_{i}^{k}(X_{ij}^{k}-1)    ~~\forall~k\in K,~i\in H_k\setminus \{h_k\} ,~j\in V^{f} \label{fip:12}
+\end{eqnarray}
+
+The validity of these constraints is ensured by setting $M_{i}^{k}\geq l_i^k$.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Experimental settings}
+\label{sec_settings}
+In this section, experimental settings are described. In our study, real passenger data and artificial parcel data are used. For passenger data, the Cabspotting database \citep{TaxiSFOnline} was used, which contains coordinates and time-stamps for a number of taxis operating in the San-Francisco area. The data set contains information on 12,563 real taxi trips. The parcel data are generated randomly as described in Section \ref{sec_SARP_settings} and \ref{sec_FIP_settings}.
+
+
+\subsection{Instance design for the SARP model}
+\label{sec_SARP_settings}
+We started the numerical experiments with small instances, however, it turned out that these are already computationally demanding. That is why our experiments with the SARP are limited to only 12 small scenarios. 
+
+Two basic factors affect the complexity of the SARP: the number of taxis and the total amount of requests. The experiments reported here is to test the influence of these two factors. Table \ref{SARPpara} lists the parameters of our data sets. The positions of passenger requests are based on the given taxi traces. For each passenger, the lower time window equals to the arrival time, and the setting of upper time window is 14:00h. The positions of parcel requests are generated following a uniform distribution $U([0,17]\times[0,10])$km. Each parcel request is associated with a time window between a moment drawn uniformly at random from the interval 9:00-12:00h (accurate to 1 minute) and 14:00h. Actual distances are replaced by the so-called Manhattan distances  ($d(x,y)=|x_1-y_1|+|x_2-y_2|$), and travel times are calculated as a ratio between the distance traveled and the average speed of a taxi (computed from the database). The parameters used in the model are given in Table \ref{SARPpara}.
+
+\begin{table} [!htbp]
+\caption{Parameters used for the SARP}
+\vspace{-1em}
+\center
+\small
+\begin{tabular}{r r r r}
+\hline
+Parameters & Values & ~~~~~~~~ Parameters & Values\\
+\hline
+$|K|$& \{1, 2, 3\} & $Q$ & 5.00\\
+$m+n~(m~=~n)$ &\{4, 6, 8, 12\} & $\eta$ & 2.00\\
+$e_i$& $U(\mbox{9:00h},\mbox{12:00h})$ & $\alpha$ & 3.50\\
+$l_i$& 14:00h&$\beta$ & 2.33\\
+$\varpi_i$ $(i\leq n)$ & $2t_{i,\sigma+i}$ & $\gamma_1$ & 2.70\\
+$T_k$& 10h & $\gamma_2$ & 0.90\\
+$q_i$ $(i\leq n)$ & 3 & $\gamma_3$ & 0.80 \\
+$q_i$ $(n<i\leq\sigma)$ & 1 &$\gamma_4$&3.50\\
+\hline
+\end{tabular}
+\label{SARPpara}
+\end{table}
+
+\subsection{Instance design for the FIP model}
+\label{sec_FIP_settings}
+The instances design highlights three factors that affect the behavior of parcel scheduling: the spatial distribution of parcel requests, the number of passenger requests, and the number of parcel requests. The requests of passengers are randomly chosen from the database containing 12,653 passenger trips. The predefined route is totally dependent on the taxi drivers' decisions. The requests of parcels are generated under five different spatial distributions.
+
+We consider 5 different spatial distributions because of two major reasons. First, the actual spatial distribution of requests depends on the users of a taxi sharing system. For instance, the spatial distribution of individual requests is usually scattered, while the traffic flow from logistic centers and warehouses to homes, shops, factories, offices, hotels, etc. tend to have a cluster-to-scatter pattern. Another case is that the parcels come from an individual or a company which needs to be sent outside the city. As they are usually transferred to some logistic center before dispatching, the traffic flow is similar to the scatter-to-cluster or the cluster-to-cluster pattern. The distribution of small parcels and mail delivery between individuals inside the same city obeys a similar spatial distributions as that of passengers. Secondly, we expect that the spatial distribution of requests has a significant impact on the performance of a taxi sharing system. These observations lead to the following spatial distributions:
+\begin{itemize}
+\item[SS] (both origins and destinations are scattered): obey a two-dimensional uniform distribution  $U([0,17]\times[0,10])$km.
+
+\item[SC] (origins are scattered, destinations are clustered): origins obey a two-dimensioned uniform distribution  $U([0,17]\times[0,10])$km. Destinations are clustered around five points drawn uniformly at random from $[0,17]\times[0,10]$km). The members of each cluster are uniformly distributed ($\sim U([-0.55,0.55]\times[-0.45,0.45])$km) around one of these five points.
+
+\item[CS] (origins are clustered, destinations are scattered): origins are generated in the same way as destinations in SC. Destinations obey a two-dimensional uniform distribution $U([0,17]\times[0,10])$km.
+
+\item[CC] (origins and destinations are clustered): both origins and destinations are clustered in a similar way as origins in the CS or destinations in the SC.
+
+\item[SF] (the distribution of origins and destinations is similar to the real statistics of San Francisco): 70\% of stops lie within the city center ($[0,6]\times[0,4]$ km), 30\% -- outside (within the rectangle of $[0,17]\times[0,10]$km).
+\end{itemize}
+
+In total, 1400 instances have been tested (140 scenarios, each including 10 instances). Each scenario has a certain number of passengers and parcels, and a certain spatial distribution (see Figure \ref{FIParti}).
+ 
+\begin{figure} [!htbp]
+\centering
+\includegraphics [width=0.60\textwidth]{arti.pdf}\\
+\caption{FIP instances design}
+\label{FIParti}
+\end{figure}
+ 
+We assume the capacity of a taxi equals to 5 units. Real passenger data is used, at most one parcel insertion is allowed between passenger services. Each parcel request is associated with a time window: the lower bound is drawn uniformly at random from the interval 8:00-16:00h (accurate to 1 minute), the upper bound equals to 19:00 for passengers and parcels. The fixed speed is used under most of the cases in the FIP, only when we calculate the travel time between two successive passengers, the formula $\min\{distance/speed,~ recorded~travel~time\}$ is used.  The reason is that our instances are based on real data recorded by taxi drivers, some outliers are unavoidable. These outliers can affect the travel time calculation between two successive passengers. Even if we use the average speed to approximate the travel time, the feasible route recorded can became infeasible. The values of other parameters (e.g., weight of requests, working hours of the taxi drivers) are the same as in the previous section (see Table \ref{SARPpara}).
+
+The instances used can be found at the http://smartlogisticslab.nl/ and are stored in files with the following naming convention. The name of instance files includes four parts  (e.g., CS\_55\_60\_1.txt):  the first part (CS, CC, SC, SS or SF) stands for the spatial distribution, the second part reflects the total number of passengers, the third part refers to the total number of parcels, and the fourth part represents the instance index.
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Numerical results}\label{sec_results}
+Test instances are solved on an Intel Core 2 Duo E7500 2.93 GHz, CPU 4GB RAM computer. GUROBI 5.5.0 was used for the static SARP and FIP model, and the dynamic SARP simulation was implemented in JAVA. 
+
+\subsection{Results for the static SARP}
+\label{ssarp_results}
+Table \ref{sarpgain} shows the results for the static SARP model. Each number in the table is obtained by averaging over 10 instances, the corresponding models run within a time limit of 2 hours. From the table, we see that by fixing the number of taxis, the profit increases as the number of requests grows. More computationally efficient algorithms are needed to solve the SARP model for realistic instances.
+
+
+\begin{table} [!htbp]
+\caption{Results of the static SARP model}
+\vspace{-1em}
+\center
+\small
+\begin{tabular}{r r r r r r }
+\hline
+$|K|$& $m+n$ & LB & UB & Gap (\%) & CPU time (seconds)\\
+\hline
+1 & 4 &16.41  &  16.41  &  0.00  &  0.07\\
+1 & 8 &45.48  &  45.48  &  0.00  &  1094.81\\
+1 & 12 & 68.62 &  110.14  &  63.75 &  5846.93\\
+2 & 4 & 17.38 &  17.38  &  0.0  &  0.27\\
+2 & 8 & 48.63  &  48.63  &  0.00 &  571.72\\
+2 & 12 & 84.30 &  114.21  &  32.83 &  6294.94\\
+3 & 4 & 19.97  &  19.97 &  0.00  &  0.73\\
+3 & 8 & 48.82  &  48.82  &  0.00  &  1129.24\\
+3 & 12& 85.81 &  117.55  &  34.55  &  6065.084\\
+\hline
+\end{tabular}
+\label{sarpgain}
+\end{table}
+
+
+
+To compare the cost/benefit of the SARP services with the traditional case when passengers and parcels are served separately, we run 30 instances for the SARP and the traditional case. Two situations are tested: rejections for requests are allowed or forbidden. Table \ref{seper combine} show the results of these experiments, each number is averaged over 10 instances. The columns ``profit'' and  ``dis'' refer to the profit and the total distance traveled in the SARP case, respectively. The column ``req'' denotes the total number of served requests in the SARP case. All the results are measured as a percentage deviation from the case when parcels and passengers are served separately.
+
+Summarizing, if rejections are allowed for requests, the profit obtained is higher than in case of separate service. The other two indicators (distance and served requests) fluctuate. However, if all the requests must be served, one can see the profit is higher and the distance is shorter when passengers share a ride with parcels.
+
+\begin{table} [!htbp]
+\caption{The SARP results obtained and measured as a percentage deviation from the case when parcels and passengers are served separately}
+\vspace{-1em}
+\center
+\small
+\begin{tabular}{r r r r r r r r r}
+\hline
+& &\multicolumn{3}{c}{Allowed rejections} & &\multicolumn{3}{c}{Forbidden rejections}\\
+$|K|$& $m+n$ & profit & dis & req &~~~~~~~& profit & dis & req\\
+\hline
+2 &  4 &  16.37 & 28.76 & 12.50 & &2.57 &-0.98 &0.00 \\
+2 &  6 &  31.55 & -24.61 & 3.92 & &39.78 &-21.36 & 0.00\\
+2 & 8 &  6.52 & -16.05 & -7.14 & & 5.79 & -4.26 & 0.00 \\
+\hline
+\end{tabular}
+\label{seper combine}
+\end{table}
+
+\subsection{Results for the dynamic SARP routing}
+\label{DSARP_results}
+The experimental setting under the dynamic case is the same as for the offline FIP part. Online routing requires making decisions in a dynamic environment. Table \ref{online} shows the results of the amount of served passengers, parcels, profit obtained from the SC, the SF instances. Each value in the table is obtained by summarizing all 40 instances (same parcels but with 35, 45, 55, 65 passengers) and measured as a percentage deviation from the CC case. The columns ``Pass'' and ``Pack'' show the amount of served passengers and parcels, respectively. Basically, the CC case offers the lowest number of served passengers and profit across all instances.  The SF, SS, SC, CS cases offer similar results in terms of profit and the amount served passengers. From the perspective of the amount of served parcels, the SF case performs better than others (the SS, SC, CS, CC cases provide similar results). 
+
+\begin{table} [!htbp]
+\caption{Results of dynamic taxi trips and measured as a percentage deviation from the CC}
+\vspace{-1em}
+\center
+\small
+\begin{tabular}{r r r r r r r r}
+\hline
+&\multicolumn{3}{c}{SC}& ~~~~ &\multicolumn{3}{c}{SF}\\
+$m$& Profit & Pass & Pack & &Profit & Pass & Pack\\
+\hline
+20&23.19& 20.57 & 158.33 & & 15.73  & 10.42 & 308.33 \\
+30&52.37 & 57.24 & -26.76 &  & 62.44 & 56.89 & 157.75 \\ 
+40&18.28  & 17.71 & 18.64 & & 42.16 & 29.43 & 230.51 \\ 
+50&23.54 & 14.96 & 42.86 & & 37.39 & 24.93 & 283.33 \\ 
+60&10.90 & 30.62 & -72.35 & & 7.34  & 17.13 & 1.18 \\ 
+70&21.78 & 28.06& -47.92 & & 30.77 & 36.45  & 77.08 \\ 
+80&36.65 & 25.07 & 29.79 & & 10.26 & 5.85  & 112.77 \\ 
+\hline
+\end{tabular}
+\label{online}
+\end{table}
+
+\subsection{Results for the FIP}
+\label{fip_results}
+Both the results and the performance evaluations of different scenarios and settings for the FIP are proposed in this section.
+\subsubsection{Results for the FIP with one insertion}
+\label{1fip_results}
+In this section, the results on the specific FIP with one insertion are presented. We calculate three indicators: total profit, acceptance rate, and average delivery time. Only part of the results for the SS and the CC cases are presented, because the performance of the SS, SC, and CS cases are similar to each other. Most results are based on the proved optimal solutions, only in few cases the solver reached the time limit of 1000 seconds and interrupted with a duality gap of at most 1\%. Each point in the figures is averaged over 10 instances. Furthermore, we present the results on the SF spatial distribution separately.
+
+Overall, the scenarios of the SS, CS, SC are much more robust as compared to the CC case from the perspective of the profit. If the quantity of requests is large, the profit is, normally, higher than that with less requests. Comparing the four spatial distribution categories, the performance of the CC case is the lowest. The reason is that this spatial distribution is sensitive to the actual mutual position of clusters and passenger stops (see Figure \ref{onetrail} for an example of ``inconvenient'' clusters). 
+
+\begin{figure} [!htbp]
+\centering
+\frame{
+\includegraphics [width=0.45\textwidth]{1cartrail.pdf}
+}
+\caption{One taxi trail of the CC case, ($\circ$) represent the parcel stops, ($+$) represent the passenger stops, dotted line represent the original trail, solid line represent the trail with parcels insertion}
+\label{onetrail}
+\end{figure}
+
+Figure~\ref{rate} shows the acceptance rate for the freight insertion. From the graph, we see that if the quantity of the passengers is small, the acceptance rate decreases to roughly 0.2. If the quantity of passengers is fixed, the acceptance rate becomes smaller along with an increase in the quantity of parcels. In addition, if the quantity of parcels is fixed, additional passengers improve the acceptance rate for the freight insertion services.
+
+
+\begin{figure} [!htbp]	
+\centering
+\begin{subfigure} [b]{0.40\textwidth}
+	\includegraphics [width=\textwidth]{ssrate.pdf}\\
+	\vspace{-1em}
+	\caption{SS}
+	\label{rate1}	
+\end{subfigure}
+\begin{subfigure} [b]{0.40\textwidth}
+	\includegraphics [width=\textwidth]{ccrate.pdf}\\
+	\vspace{-1em}
+	\caption{CC}
+	\label{rate4}
+\end{subfigure}
+\caption{FIP - Acceptance rate for 35  ($\times$), 45  ($\triangle$), 55  ($\Box$), 65  ($\Diamond$) passengers}\label{rate}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+   \begin{subfigure}{0.40\textwidth} \centering
+     \includegraphics[width=\textwidth]{sstime.pdf}
+		\vspace{-1em}
+     \caption{SS}\label{timea}
+   \end{subfigure}
+   \begin{subfigure}{0.40\textwidth} \centering
+     \includegraphics[width=\textwidth]{cctime.pdf}
+		\vspace{-1em}
+     \caption{CC}\label{timed}
+   \end{subfigure}
+\caption{FIP - Average extra delivery time for 35  ($\times$), 45  ($\triangle$), 55  ($\Box$), 65  ($\Diamond$) passengers} \label{time}
+\end{figure}
+
+Figure~\ref{time} describes the average extra delivery time for the freight insertion (for a given parcel, extra delivery time equals to the time after parcel insertion minus the original time for passenger service, if the taxi is empty, the extra delivery time equals to 0). The figure shows that the total amount of passengers or parcels has a small influence on the extra travel time for the parcel service.  Table~\ref{parceltime} provides some statistics data of the extra time for passenger trips after parcels insertion based on the output of the FIP model. On average, extra time for parcel service is around 3.44 minutes; compared to the original passenger trip time, the time used for parcel seems to be acceptable.
+
+We observed that the performance in the SF case is better than for other spatial distributions tested. This can be explained by the fact that the majority of requests are close to each other, leading to small extra distances. Given the same quantity of requests, the profit of the SF is about two times higher than in other four cases (the SC, SS, SC, CS, CC). The acceptance rate of the SF can reach 90\%, especially if the number of passengers is high enough. The average extra time for passenger delivery is 1.88 minutes. The results are promising for an actual implementation.
+
+\begin{table} [!htbp]
+\caption{Extra delivery time (minutes) for passenger services (the data is based on the parcel insertions performed by the model)}
+\vspace{-1em}
+\begin{center}
+\small
+\begin{tabular}{r r r r r }
+\hline
+&Min&Max&Mean&Std. Dev.\\
+\hline
+SS&0.00&48.16&3.70&6.04\\
+SC&0.00&57.09&3.80&6.29\\
+CS&0.00&40.98&3.95&6.31\\
+CC&0.00&59.76&3.88&7.06\\
+SF&0.00&47.64&1.88&3.98\\
+\hline
+TR &1.00&650.00&13.63&21.56\\
+\hline
+\end{tabular}
+\end{center}
+\small
+\footnotesize{``TR'' stands for the travel time of the taxi trips with passengers inside (based on 143,063 trips)}
+%\end{tablenotes}
+
+\label{parceltime}
+\end{table}
+
+
+\begin{figure} [!htbp]
+\centering
+\begin{subfigure} [b]{0.40\textwidth}
+\centering
+\includegraphics [width=\textwidth]{SFrate.pdf}\\
+\caption{Acceptance rate}
+\label{time1}	
+\end{subfigure}
+\begin{subfigure} [b]{0.40\textwidth}
+\centering
+\includegraphics [width=\textwidth]{SFtime.pdf}\\
+\caption{Extra delivery time}
+\label{time3}
+\end{subfigure}
+\caption{Results for FIP - SF scenarios for 35  ($\times$), 45  ($\triangle$), 55  ($\Box$), 65  ($\Diamond$) passengers}\label{fit}
+\end{figure}
+
+One can see that the performance of the CC case is the worst. This can be explained by the fact that the performance of the CC scenario highly depends on the mutual positions of the clusters and passenger stops. Other three cases (the SS, CS, SC) are much more robust as compared to the CC case. Another conclusion that can be made from our experiments is that there is a certain trade-off between the acceptance rate and the profit. From the viewpoint of a taxi company, the more parcels the more profit can be obtained for delivering them because there are more possibilities for choosing parcels that can be served with low additional costs. Clearly, the acceptance rate can be very low if the parcel number exceeds the maximum amount of parcels that can be served  (e.g., trips  with 90 passengers can be combined with at most 45 parcels). Thus, the taxi sharing service cannot be used on its own for parcel delivery and must be accompanied by a conventional freight service, i.e., the taxi company may have to outsource a certain amount of parcels to other logistic companies. On the other hand, for a logistic company it makes sense to outsource some parcels to a taxi company in two major cases. Firstly, a logistic company may not have enough capacity to serve its requests and will have to outsource some. Secondly, the destinations of some requests may lie in areas where various restrictions apply. It may be beneficial to outsource such ``undesirable'' requests to taxis which are less restricted (e.g. in the city center).
+
+The degree of satisfaction on the provided service is likely to depend on a combination of the acceptance rate and the delivery time. In order to provide a suitable service for the clients, policies based on different factors (e.g., profit, acceptance rate, delivery time) need to be developed. The policies can be defined according to different criteria. For instance, from the perspective of passengers the policy can be based on the thresholds of extra delivery time: if the extra delivery time is longer than a given threshold, the parcel is declined. From the perspective of taxi drivers, the threshold for a discount should also be determined: the discount should adjust enough to ensure the satisfaction of passengers and keep the profitability at the same time.  Another suggestion is that it would be wise to analyze the spatial characteristics of both people and parcel requests before implementing the freight insertion services.
+
+
+\subsubsection{Sensitivity analysis of the FIP with one insertion}
+To assess the impact of the price parameters ($\beta$, $\gamma_2$, $\gamma_3$, $\gamma_4$), we run the FIP of one insertion using different price parameter settings. In Table \ref{FIX} a group of reference values are predefined. We vary the parameters within a range $-50\%,\dots,+100\%$  of their reference values.
+
+The SF spatial distribution, 35 passengers together with 20, 40, 60 parcels are used for testing. The general effect of the changes are similar in all scenarios, we only present the results of one scenario here (with 35 passengers and 40 parcels). Figure \ref{sensitive_ana} shows the changes in various indicators due to the variation of parameters. Each point in the figure is obtained by averaging over 10 instances, and measured as a percentage deviation from the reference values of indicators (see Table \ref{FIX}).
+
+\begin{table} [!htbp]
+\caption{Reference values for parameters and indicators}
+\vspace{-1em}
+\small
+\center
+\begin{tabular}{rr}
+\hline
+Parameters &~~~~ Values\\
+\hline
+Initial fare ($\beta$)& {3.50}\\
+Parcel fare per kilometer ($\gamma_2$) &{0.90} \\
+Cost per kilometer ($\gamma_3$) &{0.80} \\
+Discount per extra minute ($\gamma_4$) &{3.50}\\
+\hline
+Indicators &~~~~ Values\\
+\hline
+Profit & 341.16\\
+Acceptance rate & 0.44\\
+Average extra delivery time & 2.15\\
+\hline
+\end{tabular}
+\label{FIX}
+\end{table}
+
+One can see from Figures \ref{sensi1} and \ref{sensi2} that $\beta$ and $\gamma_2$ have a positive effect on the profit and the acceptance rate. It indicates that if the parcels become more profitable, the taxi drivers prefer delivering parcels to obtain more profit. However, the extra time traveled may also increase together with an increase in the acceptance rate. 
+
+We observe from Figure \ref{sensi3} that $\gamma_3$ has a negative effect on the profit and the acceptance rate. The profit mainly depends on $\gamma_3$ compared to other parameters. Figure \ref{sensi4} shows the effect of discount to the indicators. The value of the acceptance rate slightly decreases. It indicates that when the discount increases, the passengers become relatively more expensive. The taxi drivers prefer to deliver passengers and the discount parameter can decrease the unhappiness of passengers under these settings. 
+
+Finally, the profit depends mainly on the value of $\gamma_3$. The acceptance rate is more sensitive to the changes of $\gamma_2$ and $\gamma_3$ compared to other two parameters. Another observation is that the extra time traveled fluctuates (see Figure \ref{sensi3}). The explanation is that the extra delivery time equals to arrival time of drop off point minus the time at the pickup point of a passenger. If a parcel is inserted into an empty taxi, the extra delivery time equals to 0.  Suppose the case that one parcel pickup/drop off point is close, and drop off/pickup point is distant, this parcel is worth to serve though it may insert the distant point between a passenger service. Tn this situation the extra travel time increases. Furthermore, the profit depends on a combination of the acceptance rate, travel distance, extra travel time, etc. The changes of any of these factors can cause the fluctuation of profit. 
+\begin{figure} [!htbp]	
+\centering
+\begin{subfigure} [b]{0.40\textwidth}
+\includegraphics [width=\textwidth]{sensitivea.pdf}\\
+\vspace{-1em}
+\caption{Impact of parameter $\beta$}
+\label{sensi1}	
+\end{subfigure}
+\begin{subfigure} [b]{0.40\textwidth}
+\includegraphics [width=\textwidth]{sensitiveb.pdf}\\
+\vspace{-1em}
+\caption{Impact of parameter $\gamma_2$}
+\label{sensi2}
+\end{subfigure}
+\begin{subfigure} [b]{0.40\textwidth}
+\includegraphics [width=\textwidth]{sensitivec.pdf}\\
+\vspace{-1em}
+\caption{Impact of parameter $\gamma_3$}
+\label{sensi3}	
+\end{subfigure}
+\begin{subfigure} [b]{0.40\textwidth}
+\includegraphics [width=\textwidth]{sensitived.pdf}\\
+\vspace{-1em}
+\caption{Impact of parameter $\gamma_4$}
+\label{sensi4}
+\end{subfigure}
+
+\caption
+{Sensitivity analysis of parameters according to different indicators: profit ($\Diamond$), acceptance rate ($\Box$), extra time ($\triangle$)\\
+\small
+{\textit{Horizontal Axis: deviation in parameters from the reference value, \% \\
+Vertical Axis: deviation in indicators form the reference value, \%\\ 
+In (c): the right vertical axis is used for $\Diamond$, the left vertical axis is for $\Box$ and $\triangle$}}
+} 
+\label{sensitive_ana}
+\end{figure} 
+
+
+\subsubsection{Effect of relaxing the insertion constraints of the FIP}
+If the FIP model allows more than one insertion between passenger service, the CPU times increase sharply. We test 4 scenarios, every scenario includes 5 instances with 4 passengers, 4 parcels and 1 taxi. The pickup and drop off points of parcels are divided into 2 groups and obey the SS, SC, CS, and CC distributions separately for these 4 scenarios. The ``S'' means the points are scattered within a distance of 27 km, the ``C'' stands for clustered, which means the distance of any 2 clustered points is within 0.20 km. 
+
+The maximum number of insertions allowed varies from 1 to 3. For the 3-insertion FIP: SS, SC, CS and CC, we get 0.34, 0.00, 0.35, 0.00, respectively. Every result is obtained by averaging the objective values over 5 instances and measured as a percentage deviation from the 1-insertion FIP. The results of 2-insertion are the same as for 3-insertion. According to the test, the increase in the maximum number of insertions has limited influence on the objective value. However, due to the small scale of the instances, one can not draw the conclusion that relaxing the insertion constraints has limited effect, large instances and a more efficient algorithm are needed for future research.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusion}\label{sec_conclusions}
+In this paper, we considered two models and developed two corresponding MILP formulations for people-freight taxi sharing: the SARP and the FIP. The SARP, that can be viewed as an extension of the well-known DARP, is the most general model as it optimizes over both passenger and freight routes. However, due to the high computational complexity of the problem, the SARP can be solved to optimality only in case of tiny instances. This motivated us to consider a restricted version of the taxi sharing problem, the FIP, that assumes fixed assignment of passengers to taxis and sequence of their service. This problem appears to be much easier from a computational point of view, and enabled us to perform an extensive numerical study of the exact solutions. Furthermore, we also addressed  the SARP in a dynamic environment. Overall, the performance of dynamic experiments shows similar behavior to the static case. Thus, one can consider the static framework for implementing a taxi sharing service. 
+
+The numerical results show that there exists a trade-off between the profit of a taxi company and the acceptance rate of parcels. In addition, the results suggest that it is desirable to analyze the spatial characteristics of requests before implementing a taxi sharing service, because the spatial distribution of requests can dramatically affect the performance of the taxi sharing system. Finally, we have shown that the performance of the system is the highest in case the spatial distribution of requests resembles a pattern inherent to cities. This makes taxi-sharing quite promising for urban areas. In general, our numerical study confirms appropriateness of the taxi-sharing systems but suggests that a traditional freight service must also be available to ensure that all requests are served.
+
+The proposed models are basic yet essential for the future research. As the considered models focus only on profitability, an immediate direction for future research is to introduce also environmental issues. Furthermore, we see the following broad areas for future research: (i) development of efficient solution algorithms (exact or heuristic) for the SARP; (ii) extending the model (introducing multiple objectives related to profit, environmental impact, etc.) and making it more flexible/realistic (e.g., consider the uncertainty in travel times, traffic jams, etc.); (iii) improving the dynamic (online) SARP framework by adding a waiting strategy (e.g., postpone the decision at some specific area or specific time periods). Finally, the results of the provided models can be used as a benchmark to measure the performance of different online optimization strategies.
+
+
+\bibliographystyle{model2-names}
+\bibliography{mybib}  % list here all the bibliographies that
+			     % you need.
+\end{document} 

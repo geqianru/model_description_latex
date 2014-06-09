@@ -45,7 +45,7 @@ As a result, integrating services as a major sustainable source of the profit of
 
 
 
-We attempt to solve a system design problem. During the design phase of a system, engineers have to select a certain design from all the possible alternatives for each critical component/stage in the system. In real life, the outcome of any development process for a certain design is uncertain with respect to the reliability requirement (Hussain and Murthy 2003). For example, since the failure mechanisms of some emerging technologies (e.g., Micro-Electro-Mechanical Systems) are complex, it is often difficult to predict the actual reliability behaviors of the critical components. Therefore newly-designed devices have been found to have uncertain component reliabilities. The uncertainty in component reliabilities can lead to large deviations of the realized system availability from the expected system availability (a point estimate for the system availability). In this case, the uncertainty in component reliabilities also needs to be considered in the decision making of system design.
+We attempt to solve a system design problem. During the design phase of a system, engineers have to select a certain design from all the possible alternatives for each critical component in the system. In real life, the outcome of any development process for a certain design is uncertain with respect to the reliability requirement (Hussain and Murthy 2003). For example, since the failure mechanisms of some emerging technologies (e.g., Micro-Electro-Mechanical Systems) are complex, it is often difficult to predict the actual reliability behaviors of the critical components. Therefore newly-designed devices have been found to have uncertain component reliabilities. The uncertainty in component reliabilities can lead to large deviations of the realized system availability from the expected system availability (a point estimate for the system availability). In this case, the uncertainty in component reliabilities also needs to be considered in the decision making of system design.
 
 %According to Oliva and Kallenberg (2003), providing after-sale services not only becomes a competitive advantage of OEMs under global competitions, also satisfies customers increasing demands for more services. Since in complex technical systems such as medical systems, material handling systems, defense systems and manufacturing systems, system failures lead to millions of euros of lost production for the customer, it is important that the availability of the systems is high, and that down-situations are recovered quickly (Kranenburg and van Houtum, 2009).
 
@@ -69,7 +69,7 @@ The remainder of the paper is organized as follows:
    %\hline
 $i$ & index for critical components in the system\\
 $j$ & index for rough designs of each component\\
-$r_{ij}$ & repair time for design $j$ in stage $i$\\
+$r$ & repair time\\
 $T$ & the time length of the service contract period\\
 $D_0$ & predetermined total downtime of a service contract\\
 $c_r^{ij}$ & repair cost per time\\
@@ -78,16 +78,16 @@ $x_{ij}$ & decision variable\\
 $\Lambda$    & system failure rate\\
 $\Lambda_{i}$  & failure rate of the $i^{th}$ component in the system \\
 $\Lambda_{ij}$ & failure rate of the $i^{th}$ component brought from supplier $j$ \\
-$A(\boldsymbol{x_{i}})$  &  design cost of component $i$\\
-$c^{ij}_{a}$ & design cost of the $i^{th}$ component brought from supplier $j$\\
+$A(x_{ij})$  & total acquisition cost of the system\\
+$c^{ij}_{a}$ & acquisition cost of the $i^{th}$ component brought from supplier $j$\\
 $N(x_{ij})$ & expected number of repairs occur in period $[0, T]$\\
 $\mu_{i}$ & mean of the failure rate in component $i$ \\
 $\mu_{ij}$ & mean of the failure rate in component $i$ bought from supplier $j$ \\
 $\sigma_{i}^{2}$ &  variance of the failure rate in component $i$ \\
 $\sigma_{ij}^{2}$ & variance of the failure rate in component $i$ bought from supplier $j$ \\
-$P(x_{ij},n_{ij})$  & probability of $n_ij$ failures occurring of design $j$ in component $i$ during period $[0, T]$ \\
-$PC(\boldsymbol{x})$ & expected penalty cost due to downtime exceeding $D_{0}$ \\
-%$C_f$    & average repair cost in period $[0, T]$
+$P(x_{ij})$  & probability of   failures occur in period $[0, T]$ \\
+$PC(x_{ij})$ & expected penalty cost due to downtime exceeding $D_{0}$ \\
+$C_f$    & average repair cost in period $[0, T]$
 
 	\end{tabular}
   %\end{center}
@@ -95,11 +95,11 @@ $PC(\boldsymbol{x})$ & expected penalty cost due to downtime exceeding $D_{0}$ \
 	
    \begin{enumerate}
    \item The components in discussion are both critical components. If a component fails, the entire system will stop functioning.
-  \item The system will be functioning for $T$ years. The exploitation phase is denoted by $[0, T]$. We assume that the system are sold at time $t=0$, and the design cost is also incurred at time $t=0$.
-  \item During the exploitation phase of the system $[0, T]$, its total downtime should be less than or equal to $D_0$ years. If the total downtime exceeds $D_0$ years, the OEM will be charged for a penalty cost with respect to the extra downtime and the penalty rate $c_p$.
-	 \item The failure rates of the components are uncertain in the design phase and distributed with the same general distribution function. Components from different rough designs have different failure rate distributions parameters and design costs. Component $i$ from the rough design of supplier $j$ has the failure rate $\Lambda_{ij}$ with mean $\mu_{ij}$ and variance $\sigma_{ij}^2$ and acquisition costs $c_{ij}$.
+  \item The system will be functioning for $T$ years. The exploitation phase is denoted by $[0, T]$. We assume that the system are sold at time $t=0$, and the acquisition cost is also incurred at time $t=0$.
+	 \item During the exploitation phase of the system $[0, T]$, its total downtime should be less than or equal to $D_0$ years. If the total downtime exceeds $D_0$ years, the OEM will be charged for a penalty cost with respect to the extra downtime and the penalty rate $c_p$.
+	 \item The failure rates of the components are uncertain in the design phase and distributed with the same general distribution function. Components from different rough designs have different failure rate distributions parameters and acquisition costs. Component $i$ from the rough design of supplier $j$ has the failure rate $\Lambda_{ij}$ with mean $\mu_{ij}$ and variance $\sigma_{ij}^2$ and acquisition costs $c_{ij}$.
 	 \item The life time of each the component is independent and exponentially distributed. So the number of the system failures over $[0, T]$ has a Poisson distribution with the system failure rate $\Lambda$.
-	\item	Once the rough design of a component has been chosen, the value of the component failure rate remains fixed before and after replaced by other new components.
+		\item	Once the rough design of a component has been chosen, the value of the component failure rate remains fixed before and after replaced by other new components.
   \item When a failure occurs, a repair will be performed. The failed part will be replaced by a ready-to-use part (repair by replacement)from the secondary supplier. The failure rate remains the same after the replacement. The repair cost $c_r^{ij}$ is fixed for each rough design.
  	
 	\end{enumerate}
@@ -108,7 +108,7 @@ During the design phase of a system, engineers have to select a certain design f
 
 The lifetimes of the components are assumed to be independent and exponentially distributed. Then for a certain rough design $j$ of component $i$ ($i \in \{1,2,...,n\}$, $j \in \{1,2,...,m_i\}$), we denote its failure rate as $\Lambda_{ij}$, which can fully describe its failure process when its lifetime distribution is exponential. However, as we mentioned in the introduction section, the outcome of any development process for a certain design is uncertain. Therefore, the failure rate $\Lambda_{ij}$ of a certain rough design $j$ for component $i$ is usually not known for sure before the development of the rough design. We use a certain distribution with a probability density function $f_{\Lambda_{ij}}(.)$ or a probability mass function $p_{\Lambda_{ij}}(.)$ to describe the random failure rate $\Lambda_{ij}$ before the development of the rough design, which reflects the prior belief/information about the reliability uncertainty of the technologies used in the rough design. In the evaluation of the average total cost over the service period $T$, these design uncertainties will be taken into account for different combinations of rough designs.
 
-The system will be sold together with a PBL contract over a service period $T$. The OEM is responsible for all the repairs within the service period, as a PBL contract. Moreover, the system availability should be above a predetermined level for the whole service period. Or in other words, the total downtime of the service period should be lower than a predetermined value $D_0$. A penalty cost will be paid to compensate the customer if the total downtime exceeds the predetermined level. As a result, the average total cost of a system over $T$ consists of three parts: (a) design cost, (b) repair cost, and (c) penalty cost. A detailed description of the evaluation of these cost elements are given in the following subsections.
+The system will be sold together with a PBL contract over a service period $T$. The OEM is responsible for all the repairs within the service period, as a material-based contract. Moreover, the system availability should be above a predetermined level for the whole service period. Or in other words, the total downtime of the service period should be lower than a predetermined value $D_0$. A penalty cost will be paid to compensate the customer if the total downtime exceeds the predetermined level. As a result, the average total cost of a system over $T$ consists of three parts: (a) design cost, (b) repair cost, and (c) penalty cost. A detailed description of the evaluation of these cost elements are given in the following subsections.
 
 
 
@@ -130,7 +130,7 @@ And the total design cost for the system is given by:
 \end{eqnarray}
 Assume we only select one supplier for each component, which means $\sum^{m_{i}}_{j=1}{x_{ij}=1}$.	
 	
-	\subsection{Repair cost}
+\subsection{Repair cost}
 	
 When a failure occurs in period $[0, T]$, a repair will be performed by the OEM. The cost for each repair is $c_r^{ij}$. For a single component $i$, the expect number of repairs for $i$ during $[0,T]$, $N(\boldsymbol{x_{i}})$ is given by (Barlow and Proschan 1967):
 %$E[N_{i}(T)]$
@@ -148,26 +148,20 @@ R(\boldsymbol{x})=\sum_{i=1}^{n}R(\boldsymbol{x_{i}})=\sum_{i=1}^{n}\sum_{j=1}^{
 \end {eqnarray}
 
 \subsection{Penalty cost}
-When the total system downtime exceeds the predetermined value according to the PBL contract, a penalty cost should be paid by the OEM to customers. Assume that each time when the system is down, there is only one component failed, we exclude the probability that two or more than two component are failed at the same time. Then for each single stage,the failures occur according to a Poisson process with an uncertain arrival rate $\Lambda_i$. The probability that $n_{ij}$ failures occur during $[0, T]$ in design $j$ of stage $i$ is:
+When the total system downtime exceeds the predetermined value according to the PBL contract, a penalty cost should be paid by the OEM to customers. Assume that each time when the system is down, there is only one component failed, we exclude the probability that two or more than two component are failed at the same time. Then for the system, the failures occur according to a Poisson process with an arrival rate $\Lambda$ and $\Lambda=\sum_{i=1}^{n}\sum_{j=1}^{m_i}{\Lambda_{ij}}$. The probability that $n$ failures occur during $[0, T]$ in component $i$ is:
 \begin {eqnarray}
-P(x_{ij},n_{ij})&=&\int^{\infty}_{0}{Pr\{N=n_{ij}|\Lambda_{ij}=\lambda_{ij}\}f_{\Lambda_{ij}}(\lambda_{ij})d\lambda_{ij}} \nonumber\\
-&=&\frac{1}{\sqrt{2\pi \sigma_{ij}^{2}}}\int^{\infty}_{0}{\frac{e^{-\lambda T}(\lambda_{ij} T)^{n_{ij}}}{n_{ij}!}e^{-\frac{(\lambda_{ij} -\mu_{ij})^{2}}{2\sigma_{ij}^{2}}}d\lambda_{ij}}
+P_{n}(\boldsymbol{x})&=&\int^{\infty}_{0}{Pr\{N=n|\Lambda=\lambda\}f_{\Lambda}}(\lambda)d\lambda \nonumber\\
+&=&\frac{1}{\sqrt{2\pi \sum_{i=1}^{n}{\sigma_{i}^{2}}}}\int^{\infty}_{0}\frac{e^{-\lambda T}(\lambda T)^n}{n!}e^{-\frac{(\lambda -\sum^{n}_{i=1}{\mu_{i}})^{2}}{2\sum^{n}_{i=1}{\sigma_{i}^{2}}}}d\lambda
 \end {eqnarray}
-So the expected downtime for stage $i$ is:
-\begin{eqnarray}
-D(\boldsymbol{x_{i}})=\sum_{j=1}^{m_{i}}{x_{ij}\sum_{n_{ij}=1}^{\infty}{P(x_{ij},n_{ij})r_{ij}n_{ij}}}
-\end{eqnarray}
-%So the expected downtime cost for stage $i$ is given as:
-%\begin {eqnarray}
-%D(\boldsymbol{x_{i}})=\sum_{j=1}^{m_i}{P(x_{ij})r_{ij}n}
-%\end {eqnarray}
-Given that $c_p$ is the penalty cost, $r_{ij}$ is the repair time for failure of design $j$ in stage $i$, $D_0$ is the predetermined system downtime in total, we find the expected penalty cost due to extra downtime exceeding $D_0$ of the system as,
-\begin{eqnarray}
-PC(\boldsymbol{x})=(\sum_{i=1}^{n}{D(\boldsymbol{x_{i}})-D_{0}})c_{p}
-\end{eqnarray}
 
+Given that $c_p$ is the penalty cost, $r_{ij}$ is the repair time for each failure of the $j$th rough design of the $i$ component, $D_0$ is the predetermined system downtime in total, we find the expected penalty cost due to extra downtime exceeding $D_0$ in stage $i$,
+
+\begin {eqnarray}
+E[N]=\sum_{n=0}^{\infty}{P_{n}}
+\end {eqnarray}
+ 
 %\begin {eqnarray}
-%PC(\boldsymbol{x})=\sum_{n_{i}=0}^{\infty}{P(\boldsymbol{x_{i}})(n_{i}r-D_{0})^{+}c_{p}}=\sum_{n_{i}=\lceil \frac{D_{0}}{r} \rceil}^{%\infty}{Pr\{N=n_{i}\}(n_{i}r-D_{0})c_{p}}
+%PC(\boldsymbol{x_{i}})=\sum_{n_{i}=0}^{\infty}{P(\boldsymbol{x_{i}})(n_{i}r-D_{0})^{+}c_{p}}=\sum_{n_{i}=\lceil \frac{D_{0}}{r} \rceil}^{\infty}{Pr\{N=n_{i}\}(n_{i}r-D_{0})c_{p}}
 %\end {eqnarray}
 %
 %where $(n_{i}r-D_{0})^{+}=max\{0,n_{i}r-D_0\}$.
@@ -176,7 +170,7 @@ PC(\boldsymbol{x})=(\sum_{i=1}^{n}{D(\boldsymbol{x_{i}})-D_{0}})c_{p}
 %\begin {eqnarray}
 %PC(\boldsymbol{x})=\sum_{i=1}^{n}{PC(x_{i})}=\sum_{i=1}^{n}\sum_{n_{i}=\lceil \frac{D_{0}}{r} \rceil}^{\infty}{Pr\{N=n_{i}\}(n_{i}r-D_{0})c_{p}}
 %\end {eqnarray}
-
+%
 \subsection{Problem formulation}
 We formulate our problem as
 \begin{eqnarray}
@@ -185,11 +179,14 @@ We formulate our problem as
 \end{eqnarray}
 where $\pi(\boldsymbol{x})$ is the expected LCC for the system and obviously, we have:
 \begin{eqnarray}
-\pi(\boldsymbol{x}) &=& A(\boldsymbol{x})+R(\boldsymbol{x})+PC(\boldsymbol{x}) \nonumber\\
-&=& \sum_{i=1}^{n}{A(\boldsymbol{x_{i}})}+\sum_{i=1}^{n}{R(\boldsymbol{x_{i}})}+(\sum_{i=1}^{n}{D(\boldsymbol{x_{i}})-D_{0}})c_{p}
+\pi(\boldsymbol{x})=\sum_{i=1}^{n}{\pi(\boldsymbol{x_{i}})} \nonumber
+\end{eqnarray}
+and $\pi(\boldsymbol{x_{i}})$ is the expected total cost of each stage $i$,
+\begin{eqnarray}
+\pi(\boldsymbol{x_{i}})=A(\boldsymbol{x_{i}})+R(\boldsymbol{x_{i}})+PC(\boldsymbol{x_{i}}) \nonumber
 \end{eqnarray}
 
-%\subsubsection{}
+\subsubsection{}
 	
    	
 \end{document}
